@@ -16,8 +16,7 @@
         </h1>
 
         <p class="hero__description">
-            Esta aplicación servirá como punto de partida para aprender arquitectura MVC,
-            Blade, Eloquent, validación, pruebas, control de versiones y despliegue.
+            Acá estamos con el inicio del proyecto
         </p>
 
         <span class="hero__status" data-app-status>
