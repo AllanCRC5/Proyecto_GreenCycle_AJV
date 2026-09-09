@@ -1,23 +1,12 @@
-# Web Development Laravel Starter
+# GreenCycle
 
-Proyecto base para el curso **TM4100**, preparado para desarrollar aplicaciones web con Laravel en un entorno reproducible.
+## Descripción
 
-## Propósito
+GreenCycle es una aplicación web desarrollada como proyecto académico que combina mecánicas de gestión virtual con concientización ambiental. Los usuarios pueden plantar y administrar árboles virtuales, monitorear su crecimiento, adquirir objetos para mejorar su desarrollo y gestionar recursos mediante un sistema de inventario.
 
-Esta aplicación proporciona un entorno inicial para aprender y practicar:
+El proyecto se desarrolla de forma incremental mediante sprints, incorporando nuevas funcionalidades en cada etapa del desarrollo.
 
-- Arquitectura MVC.
-- Rutas y controladores.
-- Vistas con Blade.
-- Formularios y validación de datos.
-- Eloquent ORM.
-- Migraciones y seeders.
-- Integración con PostgreSQL.
-- Pruebas automatizadas.
-- Control de versiones con Git y GitHub.
-- Integración continua con GitHub Actions.
-- Despliegue de aplicaciones web.
-
+---
 ## Tecnologías
 
 El proyecto utiliza las siguientes tecnologías:
@@ -34,6 +23,156 @@ El proyecto utiliza las siguientes tecnologías:
 - Laravel Pint.
 - GitHub Actions.
 - Render.
+
+---
+
+Funcionalidades del Sprint 1
+
+En esta primera entrega se definió la arquitectura inicial del sistema y el modelo de dominio. Las funcionalidades contempladas incluyen:
+
+- Gestión de usuarios.
+- Registro e inicio de sesión.
+- Creación y consulta de árboles.
+- Modelo de semillas.
+- Diseño del sistema de inventario.
+- Diseño del sistema de efectos.
+- Definición de endpoints REST.
+- Diseño de autorizaciones y control de acceso.
+
+---
+
+## Modelo de Dominio
+
+### Entidades Principales
+
+#### Usuario
+Representa a la persona que utiliza la plataforma. Puede poseer árboles, administrar un inventario y realizar compras.
+
+#### Árbol
+Representa un árbol virtual asociado a un usuario. Mantiene información relacionada con salud, crecimiento y estado.
+
+#### Semilla
+Define el tipo de árbol que puede ser plantado.
+
+#### Inventario
+Almacena los ítems pertenecientes a un usuario.
+
+#### Ítem
+Objeto consumible que puede utilizarse para modificar el comportamiento de un árbol.
+
+#### Efecto
+Modificador temporal aplicado a un árbol mediante el uso de ítems.
+
+---
+
+## 🔌 API REST
+
+### Autenticación
+
+#### Registrar usuario
+
+```http
+POST /api/register
+```
+
+#### Iniciar sesión
+
+```http
+POST /api/login
+```
+
+#### Cerrar sesión
+
+```http
+POST /api/logout
+```
+
+### Árboles
+
+#### Obtener todos los árboles del usuario autenticado
+
+```http
+GET /api/trees
+```
+
+#### Obtener un árbol específico
+
+```http
+GET /api/trees/{id}
+```
+
+#### Crear un árbol
+
+```http
+POST /api/trees
+```
+
+Ejemplo de solicitud:
+
+```json
+{
+  "seed_id": 1
+}
+```
+
+---
+
+## Seguridad y Autorización
+
+El sistema utiliza autenticación basada en tokens mediante Laravel Sanctum.
+
+Cada usuario únicamente podrá acceder a los recursos que le pertenezcan:
+
+- Consultar sus propios árboles.
+- Crear árboles asociados a su cuenta.
+- Modificar únicamente sus recursos.
+- Bloquear el acceso a información de otros usuarios.
+
+---
+
+## Estructura General del Proyecto
+
+```text
+GreenCycle
+│
+├── backend
+│   ├── app
+│   ├── routes
+│   ├── database
+│   └── tests
+│
+├── frontend
+│   ├── src
+│   ├── components
+│   ├── pages
+│   └── services
+│
+└── README.md
+```
+
+---
+
+## Evolución del Proyecto
+
+### Sprint 1
+- Modelo de dominio.
+- Diseño de base de datos.
+- Diseño de API REST.
+- Definición de autenticación y autorización.
+
+### Sprint 2
+- Implementación del inventario.
+- Sistema de tienda.
+- Compra de ítems.
+- Aplicación de efectos.
+
+### Sprint 3
+- Mecánicas de crecimiento.
+- Gestión completa de estados de los árboles.
+- Balance de progresión.
+- Mejoras en experiencia de usuario.
+
+---
 
 ## Requisitos locales
 
@@ -251,26 +390,27 @@ git switch main
 git pull origin main
 ```
 
-## Configuración pendiente
+## URL
 
-Antes de distribuir el proyecto, sustituya:
-
-```text
-URL_DEL_REPOSITORIO
+ - Repositorio
+```https://github.com/AllanCRC5/Proyecto_GreenCycle_AJV.git
 ```
 
-por la URL real del repositorio en GitHub.
+ - Neon
 
-También debe sustituir:
-
-```text
-URL_DE_NEON_DEVELOPMENT
+```postgresql://neondb_owner:npg_hZ6SbH5tRzsY@ep-morning-feather-aeoaz4py-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
 ```
 
-por la cadena de conexión de la base de datos de desarrollo en Neon.
+## Equipo de Desarrollo
 
+- Valeria Leticia Salas Jiménez
+- Allan Castro Rodríguez
+- Jean Marco Escobar Rojas
 
-## Estado del proyecto
-El repositorio utiliza GitHub Actions para validar pruebas, formato y recursos frontend.
-=======
+---
+
+## Licencia
+
+Este proyecto fue desarrollado con fines académicos.
+
 <!-- branch protection test -->
