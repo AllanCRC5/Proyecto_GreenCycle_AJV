@@ -393,12 +393,14 @@ git pull origin main
 ## URL
 
  - Repositorio
-``` https://github.com/AllanCRC5/Proyecto_GreenCycle_AJV.git
+``` text
+https://github.com/AllanCRC5/Proyecto_GreenCycle_AJV.git
 ```
 
  - Neon
 
-``` postgresql://neondb_owner:npg_hZ6SbH5tRzsY@ep-morning-feather-aeoaz4py-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+``` text
+ postgresql://neondb_owner:npg_hZ6SbH5tRzsY@ep-morning-feather-aeoaz4py-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
 ```
 
 ## Equipo de Desarrollo
