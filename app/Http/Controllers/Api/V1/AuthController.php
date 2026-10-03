@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Http\JsonResponse;
-use App\Http\Requests\RegisterUserRequest;
 use App\Http\Requests\LoginUserRequest;
+use App\Http\Requests\RegisterUserRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class AuthController extends Controller
 {
@@ -19,14 +19,14 @@ class AuthController extends Controller
     public function register(RegisterUserRequest $request): JsonResponse
     {
         //
-        $user=User::create($request->validated());
+        $user = User::create($request->validated());
 
-        $token= $user->createToken('api')->plainTextToken;
+        $token = $user->createToken('api')->plainTextToken;
 
         return (new UserResource($user))
-        ->additional(['token'=>$token])
-        ->response()
-        ->setStatusCode(Response::HTTP_CREATED);
+            ->additional(['token' => $token])
+            ->response()
+            ->setStatusCode(Response::HTTP_CREATED);
 
     }
 
@@ -36,11 +36,11 @@ class AuthController extends Controller
     public function login(LoginUserRequest $request): JsonResponse
     {
         //
-        $user= $request->authenticate();
+        $user = $request->authenticate();
 
-        $token=$user->createToken('api')->plainTextToken;
+        $token = $user->createToken('api')->plainTextToken;
 
-        return (new UserResource($user))->additional(['token'=>$token])->response()->setStatusCode(Response::HTTP_OK);
+        return (new UserResource($user))->additional(['token' => $token])->response()->setStatusCode(Response::HTTP_OK);
     }
 
     /**
@@ -52,7 +52,7 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
-            "message"=>"Logout successfully",
+            'message' => 'Logout successfully',
         ]);
     }
 

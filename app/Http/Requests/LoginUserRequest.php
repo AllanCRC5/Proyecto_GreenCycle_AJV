@@ -26,21 +26,22 @@ class LoginUserRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email'=>['required', 'string', 'email'],
-            'password'=>['required', 'string'],
+            'email' => ['required', 'string', 'email'],
+            'password' => ['required', 'string'],
         ];
     }
 
     public function authenticate(): User
     {
-        $user= User::where('email', $this->string('email')->first());
-        
-        if (! $user || !Hash::check($this->string('password', $user->password)))
-        {
+        $user = User::where('email', $this->string('email'))->first();
+
+        if (! $user || ! Hash::check($this->string('password'), $user->password)) {
+            // Same message for "unknown email" and "wrong password" so we don't leak which one was wrong.
             throw ValidationException::withMessages([
-                'email'=> 'These credentials do not match our records',
+                'email' => 'These credentials do not match our records.',
             ]);
         }
+
         return $user;
     }
 }

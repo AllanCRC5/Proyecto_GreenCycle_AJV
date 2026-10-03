@@ -1,8 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Api\V1\AuthController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -10,25 +10,24 @@ Route::get('/user', function (Request $request) {
 
 Route::prefix('v1')
     ->name('api.v1.')
-    ->group(function():void{
+    ->group(function (): void {
 
-    Route::post('register', [AuthController::class, 'register'])
-    ->middleware('throttle:5,1')
-    ->name('register');
+        Route::post('register', [AuthController::class, 'register'])
+            ->middleware('throttle:5,1')
+            ->name('register');
 
-    Route::post('login', [AuthController::class, 'login'])
-    ->middleware('throttle:5,1')
-    ->name('login');
+        Route::post('login', [AuthController::class, 'login'])
+            ->middleware('throttle:5,1')
+            ->name('login');
 
+        Route::middleware('auth:sanctum')->group(function (): void {
 
-    Route::middleware('auth:sanctum')->group(function():void{
+            Route::post('logout', [AuthController::class, 'logout'])
+                ->name('logout');
 
-        Route::post('logout', [AuthController::class, 'logout'])
-        ->name('logout');
+            Route::post('me', [AuthController::class, 'me'])
+                ->name('me');
 
-        Route::post('me', [AuthController::class, 'me'])
-        ->name('me');
+        });
 
     });
-
-});
