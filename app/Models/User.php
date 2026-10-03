@@ -7,19 +7,18 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-
 
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasApiToken, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * Get the attributes that should be cast.
@@ -34,19 +33,22 @@ class User extends Authenticatable
         ];
     }
 
-    public function purchase():HasMany
+    public function purchase(): HasMany
     {
         return $this->hasMany(Purchase::class);
     }
-    public function tree():HasOne
+
+    public function tree(): HasOne
     {
         return $this->hasOne(Tree::class);
     }
-    public function effect():HasMany
+
+    public function effect(): HasMany
     {
         return $this->hasMany(Effect::class);
     }
-    public function inventory():HasMany
+
+    public function inventory(): HasMany
     {
         return $this->hasMany(Inventory::class);
     }

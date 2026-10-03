@@ -14,11 +14,11 @@ return new class extends Migration
         Schema::create('items', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-            $table->varchar("name");
-            $table->integer("effect_duration");
-            $table->varchar("effect_type");
-            $table->text("description");
-            $table->decimal("price", 10, 2);
+            $table->string('name');
+            $table->integer('effect_duration');
+            $table->string('effect_type');
+            $table->text('description');
+            $table->decimal('price', 10, 2);
         });
     }
 

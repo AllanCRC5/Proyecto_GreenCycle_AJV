@@ -14,15 +14,15 @@ return new class extends Migration
         Schema::create('effects', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-            //foreign id
+            // foreign id
             $table->foreignId('user_id');
             $table->foreignId('item_id');
             $table->foreignId('tree_id');
-            //fin foreign id
-            $table->varchar("effect_type");
-            $table->timestamp("expires_at");
-            $table->timestamp("started_at");
-            $table->varchar("status");
+            // fin foreign id
+            $table->string('effect_type');
+            $table->timestamp('expires_at');
+            $table->timestamp('started_at');
+            $table->string('status');
         });
     }
 

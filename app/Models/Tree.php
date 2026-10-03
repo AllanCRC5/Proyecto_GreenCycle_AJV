@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Tree extends Model
 {
     //
-    protected $fillable=[
+    protected $fillable = [
         'level',
         'health',
         'progress',
@@ -20,12 +20,12 @@ class Tree extends Model
         'harvested_at',
     ];
 
-    public function user():belongsTo
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function effect():HasMany
+    public function effect(): HasMany
     {
         return $this->hasMany(Effect::class);
     }

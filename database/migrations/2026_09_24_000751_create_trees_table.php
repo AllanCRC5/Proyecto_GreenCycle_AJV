@@ -15,14 +15,14 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
             $table->foreignId('user_id');
-            $table->integer("level");
-            $table->integer("health");
-            $table->integer("progress");
-            $table->varchar("status");
-            $table->timestamp("last_care_at");
-            $table->timestamp("next_care_at");
-            $table->timestamp("last_decay_at");
-            $table->timestamp("harvested_at");
+            $table->integer('level');
+            $table->integer('health');
+            $table->integer('progress');
+            $table->string('status');
+            $table->timestamp('last_care_at');
+            $table->timestamp('next_care_at');
+            $table->timestamp('last_decay_at');
+            $table->timestamp('harvested_at');
         });
     }
 

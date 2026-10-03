@@ -5,11 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-
 class Item extends Model
 {
     //
-    protected $fillable=[
+    protected $fillable = [
         'name',
         'effect_duration',
         'effect_type',
@@ -17,17 +16,18 @@ class Item extends Model
         'price',
     ];
 
-    public function inventory():HasMany
+    public function inventory(): HasMany
     {
         return $this->hasMany(Inventory::class);
     }
-    public function effect():HasMany
+
+    public function effect(): HasMany
     {
         return $this->hasMany(Effect::class);
     }
-    public function purchase():HasMany
+
+    public function purchase(): HasMany
     {
         return $this->hasMany(Purchase::class);
     }
-
 }
