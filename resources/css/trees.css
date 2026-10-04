@@ -1,0 +1,37 @@
+/* Usa las variables de :root definidas en app.css */
+.dashboard h1 { margin: 0 0 1rem; color: var(--color-primary-dark); }
+.status-msg { min-height: 1.5rem; margin: 0 0 1rem; color: var(--color-muted); }
+.status-msg[data-type="success"] { color: var(--color-primary-dark); font-weight: 600; }
+.status-msg[data-type="error"] { color: #9b2c2c; font-weight: 600; }
+.status-msg[data-type="error"]::before { content: "⚠ "; }
+
+.tree-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+
+.tree-card {
+  display: grid; gap: .75rem; padding: 1.25rem;
+  background: var(--color-surface); color: var(--color-text);
+  border: 1px solid var(--color-border); border-radius: 1rem;
+  box-shadow: var(--shadow-card);
+}
+.tree-card--dead { border-style: dashed; opacity: .85; }
+.tree-card--mature { border: 2px solid var(--color-primary); }
+.tree-card__head { display: flex; justify-content: space-between; align-items: start; gap: .5rem; }
+.tree-card__head h2 { margin: 0; font-size: 1.1rem; }
+.tree-card__level { margin: 0; font-weight: 600; }
+.badge { margin: 0; font-size: .85rem; text-align: right; }
+
+.meter__row { display: flex; justify-content: space-between; font-size: .9rem; margin-bottom: .25rem; }
+.meter__track { height: .75rem; background: var(--color-border); border-radius: 999px; overflow: hidden; }
+.meter__fill { height: 100%; background: var(--color-primary); transition: width .4s ease; }
+
+.tree-card__timer { margin: 0; min-height: 1.25rem; font-variant-numeric: tabular-nums; color: var(--color-text); }
+
+.btn {
+  padding: .7rem 1rem; border: 0; border-radius: .6rem; cursor: pointer;
+  font: inherit; font-weight: 600; color: var(--color-surface); background: var(--color-primary);
+}
+.btn:hover:not(:disabled) { background: var(--color-primary-dark); }
+.btn:disabled { opacity: .55; cursor: not-allowed; }
+.btn:focus-visible, .tree-card :focus-visible { outline: 3px solid var(--color-accent); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) { .meter__fill { transition: none; } }
