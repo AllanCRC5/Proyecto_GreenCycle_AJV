@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('trees', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-            $table->foreignId('user_id')->constrained();;
-            $table->integer('level');
-            $table->integer('health');
-            $table->integer('progress');
+            $table->foreignId('user_id')->constrained();
+            $table->integer('level')->default(0);
+            $table->integer('health')->default(0);
+            $table->integer('progress')->default(0);
             $table->string('status');
             $table->timestamp('last_care_at');
             $table->timestamp('next_care_at');
