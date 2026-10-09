@@ -1,0 +1,36 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('trees', function (Blueprint $table) {
+            $table->id();
+            $table->timestamps();
+            $table->foreignId('user_id')->constrained();
+            $table->integer('level')->default(0);
+            $table->integer('health')->default(0);
+            $table->integer('progress')->default(0);
+            $table->string('status');
+            $table->timestamp('last_care_at');
+            $table->timestamp('next_care_at');
+            $table->timestamp('last_decay_at');
+            $table->timestamp('harvested_at');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('trees');
+    }
+};
