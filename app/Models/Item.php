@@ -16,18 +16,13 @@ class Item extends Model
         'price',
     ];
 
-    public function inventory(): HasMany
+    public function inventory(): BelongsTo
     {
-        return $this->hasMany(Inventory::class);
+        return $this->belongsTo(Inventory::class);
     }
 
-    public function effect(): HasMany
+    public function purchase(): BelongsTo
     {
-        return $this->hasMany(Effect::class);
-    }
-
-    public function purchase(): HasMany
-    {
-        return $this->hasMany(Purchase::class);
+        return $this->belongsTo(Purchase::class);
     }
 }

@@ -19,8 +19,8 @@ class Purchase extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function item(): BelongsTo
+    public function item(): HasMany
     {
-        return $this->belongsTo(Item::class);
+        return $this->HasMany(Item::class);
     }
 }

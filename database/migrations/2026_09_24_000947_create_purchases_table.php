@@ -15,8 +15,7 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
             // foreignId
-            $table->foreignId('user_id');
-            $table->foreignId('item_id');
+            $table->foreignId('user_id')->constrained();;
             $table->integer('quantity');
             $table->decimal('unit_price', 10, 2);
             $table->decimal('total_price', 10, 2);

@@ -43,13 +43,8 @@ class User extends Authenticatable
         return $this->hasOne(Tree::class);
     }
 
-    public function effect(): HasMany
+    public function inventory(): HasOne
     {
-        return $this->hasMany(Effect::class);
-    }
-
-    public function inventory(): HasMany
-    {
-        return $this->hasMany(Inventory::class);
+        return $this->hasOne(Inventory::class);
     }
 }

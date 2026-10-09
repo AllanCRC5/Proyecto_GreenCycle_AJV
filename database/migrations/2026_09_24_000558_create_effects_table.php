@@ -15,9 +15,7 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
             // foreign id
-            $table->foreignId('user_id');
-            $table->foreignId('item_id');
-            $table->foreignId('tree_id');
+            $table->foreignId('tree_id')->constrained();
             // fin foreign id
             $table->string('effect_type');
             $table->timestamp('expires_at');

@@ -14,10 +14,13 @@ return new class extends Migration
         Schema::create('items', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
+            //foreignKey
+            $table->foreignId('purchase_id')->constrained();
+            $table->foreignId('inventory_id')->constrained();
             $table->string('name');
             $table->integer('effect_duration');
             $table->string('effect_type');
-            $table->text('description');
+            $table->text('description')->nullable();
             $table->decimal('price', 10, 2);
         });
     }
