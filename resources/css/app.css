@@ -3,14 +3,15 @@
    ============================================ */
 :root {
   /* Colores base */
-    --color-background: #f4f7fb;
-    --color-border: #dce3ed;
-    --color-muted: #5f6b7a;
-    --color-primary: #1d4ed8;
-    --color-primary-dark: #1e3a8a;
-    --color-surface: #ffffff;
-    --color-text: #172033;
-
+    --color-background: #f7f3e8;
+    --color-border: #dfead9;
+    --color-muted: #647a5f;
+    --color-primary: #355e3b;
+    --color-primary-dark: #27452d;
+    --color-surface: #fff9ef;
+    --color-text: #2f3b2f;
+    --color-accent: #e8c547;
+    
   /* Sombras */
   --shadow-card: 0 18px 45px rgb(15 23 42 / 8%);
 
