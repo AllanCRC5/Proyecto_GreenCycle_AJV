@@ -10,15 +10,21 @@ class Tree extends Model
 {
     //
     protected $fillable = [
-        'level',
-        'health',
-        'progress',
-        'status',
-        'last_care_at',
-        'next_care_at',
-        'last_decay_at',
-        'harvested_at',
+        'user_id',
+        'seed_type',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'seed_type' => SeedType::class,
+            'status' => TreeStatus::class,
+            'last_care_at' => 'datetime',
+            'next_care_at' => 'datetime',
+            'last_decay_at' => 'datetime',
+            'harvested_at' => 'datetime',
+        ];
+    }
 
     public function user(): BelongsTo
     {
