@@ -3,7 +3,11 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\TreeRequest;
+use App\Http\Resources\TreeResource;
+use App\Models\Tree;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class TreeController extends Controller
 {
@@ -21,7 +25,7 @@ class TreeController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreTreeRequest $request)
+    public function store(TreeRequest $request)
     {
         // 201 y 401,409, 422
         $tree = $request->user()->tree()->create($request->validated());
@@ -35,7 +39,7 @@ class TreeController extends Controller
     public function show(Request $request, Tree $tree)
     {
         // 200 y 401,404
-        $this->ensureUserOwnTree($request, $tree);
+        $this->ensureUserOwnsTree($request, $tree);
 
         return new TreeResource($tree->load('effect'));
     }
