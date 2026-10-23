@@ -1,17 +1,18 @@
-import { getTrees, getTree, careTree } from './api.js';
+import { getTrees, getTree, careTree, getToken, USE_MOCK } from './api.js';
 import { renderTree } from './treeCard.js';
 import { startCountdown } from './countdown.js';
+import './auth.js';
 
-//
+// --- Código original (página home) ---
 const statusElement = document.querySelector("[data-app-status]");
 if (statusElement) {
     statusElement.textContent = "Laravel, JavaScript y Vite están funcionando.";
 }
 
+// --- Dashboard de árboles ---
 const grid = document.getElementById('tree-grid');
-
-const stoppers = new Map(); // id -> función para detener su contador
 const msg = document.getElementById('status-msg');
+const stoppers = new Map(); // id -> función para detener su contador
 
 function say(text, type = 'info') {
   msg.textContent = text;
@@ -71,6 +72,7 @@ async function onCare(id) {
 }
 
 async function initDashboard() {
+  if (!USE_MOCK && !getToken()) { location.href = '/login'; return; }
   say('Cargando tus árboles…');
   const res = await getTrees();
   if (!res.ok) { say(errorText(res), 'error'); return; }
@@ -79,4 +81,6 @@ async function initDashboard() {
   say('');
   trees.forEach(paint);
 }
-   if (grid) initDashboard(); // app.js se carga en todas las páginas
+
+// Siempre al final, para que todo lo anterior ya esté definido
+if (grid) initDashboard();

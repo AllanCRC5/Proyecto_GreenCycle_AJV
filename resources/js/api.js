@@ -1,22 +1,24 @@
 // Capa de acceso al API. Cambie USE_MOCK a false cuando el backend esté listo.
 export const USE_MOCK = true;
-const BASE = '/api';
+const BASE = '/api/v1';
 
 export const getToken = () => localStorage.getItem('token');
 export const setToken = (t) => localStorage.setItem('token', t);
+export const clearToken = () => localStorage.removeItem('token');
 
 // Devuelve siempre { ok, status, data }. Fetch NO lanza error con 409/422, por eso se revisa aquí.
+// skipAuth: true para login/registro (no llevan token y un 401 no debe redirigir).
 async function request(path, options = {}) {
+  const { skipAuth, ...opts } = options;
+  const headers = { Accept: 'application/json', 'Content-Type': 'application/json' };
+  if (!skipAuth && getToken()) headers.Authorization = `Bearer ${getToken()}`;
   try {
-    const res = await fetch(BASE + path, {
-      ...options,
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${getToken()}`,
-      },
-    });
+    const res = await fetch(BASE + path, { ...opts, headers });
     const data = await res.json().catch(() => ({}));
+    if (res.status === 401 && !skipAuth) { // sesión vencida o sin token
+      clearToken();
+      location.href = '/login';
+    }
     return { ok: res.ok, status: res.status, data };
   } catch {
     return { ok: false, status: 0, data: { message: 'Sin conexión con el servidor.' } };
@@ -59,3 +61,31 @@ export const getTree = (id) =>
 
 export const careTree = (id) =>
   USE_MOCK ? wait(mockCare(id)) : request(`/trees/${id}/care`, { method: 'POST' });
+
+// ---------- AUTENTICACIÓN ----------
+function mockAuth(kind, d) {
+  const errors = {};
+  if (!d.email?.includes('@')) errors.email = ['Escribe un correo válido.'];
+  if ((d.password ?? '').length < 8) errors.password = ['La contraseña debe tener al menos 8 caracteres.'];
+  if (kind === 'register') {
+    if (!d.name?.trim()) errors.name = ['El nombre es obligatorio.'];
+    if (d.password !== d.password_confirmation) errors.password = ['Las contraseñas no coinciden.'];
+  }
+  if (Object.keys(errors).length)
+    return { ok: false, status: 422, data: { message: 'Datos no válidos.', errors } };
+  return { ok: true, status: kind === 'register' ? 201 : 200, data: { token: 'mock-token' } };
+}
+
+export const register = (d) =>
+  USE_MOCK ? wait(mockAuth('register', d))
+           : request('/register', { method: 'POST', body: JSON.stringify(d), skipAuth: true });
+
+export const login = (d) =>
+  USE_MOCK ? wait(mockAuth('login', d))
+           : request('/login', { method: 'POST', body: JSON.stringify(d), skipAuth: true });
+
+export async function logout() {
+  if (!USE_MOCK) await request('/logout', { method: 'POST' });
+  clearToken();
+  location.href = '/login';
+}
