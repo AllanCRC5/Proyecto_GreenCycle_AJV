@@ -12,8 +12,8 @@ class DemoUserSeeder extends Seeder
     {
         // Usuario solo para demostración
         $user = User::create([
-            'name'     => 'Usuario Demo',
-            'email'    => 'demo@greencycle.test',
+            'name' => 'Usuario Demo',
+            'email' => 'demo@greencycle.test',
             'password' => 'password123', // el cast 'hashed' lo encripta solo
         ]);
 

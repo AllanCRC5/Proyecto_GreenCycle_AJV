@@ -54,19 +54,18 @@ class TreeController extends Controller
                 );
             }
 
-            $tree = new Tree();
+            $tree = new Tree;
 
             $tree->seed_type = $validated['seed_type']
                 ?? SeedType::BASIC->value;
 
             // Los valores iniciales los establece el servidor.
-            
+
             $tree->level = 0;
             $tree->health = config('greencycle.health_initial', 100);
             $tree->progress = config('greencycle.progress_initial', 0);
             $tree->status = TreeStatus::ACTIVE;
             $tree->last_decay_at = now();
-
 
             $tree->user()->associate($user);
             $tree->save();
@@ -96,4 +95,3 @@ class TreeController extends Controller
         );
     }
 }
-

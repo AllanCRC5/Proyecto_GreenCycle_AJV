@@ -38,6 +38,4 @@ return new class extends Migration
     {
         Schema::dropIfExists('trees');
     }
-
 };
-

@@ -11,12 +11,12 @@ class TreeFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id'       => User::factory(),
-            'seed_type'     => 'BASIC',
-            'level'         => 0,
-            'health'        => 100,
-            'progress'      => 0,
-            'status'        => 'ACTIVE',
+            'user_id' => User::factory(),
+            'seed_type' => 'BASIC',
+            'level' => 0,
+            'health' => 100,
+            'progress' => 0,
+            'status' => 'ACTIVE',
             'last_decay_at' => now(),
         ];
     }
@@ -25,7 +25,7 @@ class TreeFactory extends Factory
     public function mature(): static
     {
         return $this->state(fn () => [
-            'level'  => 10,
+            'level' => 10,
             'status' => 'MATURE',
         ]);
     }

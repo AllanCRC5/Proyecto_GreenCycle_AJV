@@ -1,10 +1,10 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\TreeCareController;
 use App\Http\Controllers\Api\V1\TreeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\V1\TreeCareController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -33,7 +33,7 @@ Route::prefix('v1')
             Route::apiResource('tree', TreeController::class);
 
             Route::post('tree/{tree}/care', [TreeCareController::class, 'care'])
-            ->name('tree.care');
+                ->name('tree.care');
         });
 
     });
