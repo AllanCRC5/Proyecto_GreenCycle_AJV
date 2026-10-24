@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\TreeCareController;
+use App\Http\Controllers\Api\V1\TreeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -27,7 +29,11 @@ Route::prefix('v1')
 
             Route::post('me', [AuthController::class, 'me'])
                 ->name('me');
+            // POST, GET, PUT, DELETE de los arboles.
+            Route::apiResource('tree', TreeController::class);
 
+            Route::post('tree/{tree}/care', [TreeCareController::class, 'care'])
+                ->name('tree.care');
         });
 
     });
