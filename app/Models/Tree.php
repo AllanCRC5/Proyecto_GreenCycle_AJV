@@ -17,30 +17,17 @@ class Tree extends Model
         'seed_type',
     ];
 
-    /* Valores de un árbol recién plantado (nivel 0, salud 100, progreso 0, ACTIVE).
-     Sirven para que la respuesta JSON del POST /trees salga completa. */
-    protected $attributes = [
-        'seed_type' => 'BASIC',
-        'level'     => 0,
-        'health'    => 100,
-        'progress'  => 0,
-        'status'    => 'ACTIVE',
-    ];
-
-    // Conversión
     protected function casts(): array
     {
         return [
-            'last_care_at'  => 'datetime',
-            'next_care_at'  => 'datetime',
+            'seed_type' => SeedType::class,
+            'status' => TreeStatus::class,
+            'last_care_at' => 'datetime',
+            'next_care_at' => 'datetime',
             'last_decay_at' => 'datetime',
-            'harvested_at'  => 'datetime',
+            'harvested_at' => 'datetime',
         ];
     }
-
-    // ---------------------------------------------------------------
-    // Relaciones
-    // ---------------------------------------------------------------
 
     public function user(): BelongsTo
     {

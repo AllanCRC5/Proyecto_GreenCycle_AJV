@@ -14,8 +14,7 @@ return new class extends Migration
         Schema::create('inventories', function (Blueprint $table) {
             $table->id();
             // foreigId
-            $table->foreignId('user_id');
-            $table->foreignId('item_id');
+            $table->foreignId('user_id')->constrained();
             // fin foreignId
             $table->integer('quantity');
         });

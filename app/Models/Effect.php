@@ -15,16 +15,6 @@ class Effect extends Model
         'status',
     ];
 
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    public function item(): BelongsTo
-    {
-        return $this->belongsTo(Item::class);
-    }
-
     public function tree(): BelongsTo
     {
         return $this->belongsTo(Tree::class);
