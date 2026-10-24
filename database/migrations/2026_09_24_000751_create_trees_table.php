@@ -41,10 +41,3 @@ return new class extends Migration
 
 };
 
-Schema::create('trees', function (Blueprint $table) {
-    // ... tus columnas ...
-
-    $table->index(['user_id', 'status']);        // para listar los árboles de un usuario por estado
-    $table->index(['status', 'last_decay_at']);  // para que el Scheduler encuentre los ACTIVE pendientes de deterioro
-});
-

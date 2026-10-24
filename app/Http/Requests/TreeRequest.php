@@ -24,7 +24,7 @@ class TreeRequest extends FormRequest
     {
         return [
             //
-            'seed_type' => ['required'],
+            'seed_type' => ['sometimes', 'in:BASIC,SPECIAL'],
         ];
     }
 }

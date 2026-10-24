@@ -24,6 +24,7 @@ class TreeResource extends JsonResource
             'status' => $this->status,
             'last_care_at' => $this->last_care_at,
             'next_care_at' => $this->next_care_at,
+            'last_decay_at' => $this->last_decay_at,
             'created_at' => $this->created_at,
         ];
     }

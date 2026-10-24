@@ -2,74 +2,98 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\SeedType;
+use App\Enums\TreeStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\TreeRequest;
 use App\Http\Resources\TreeResource;
 use App\Models\Tree;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 
 class TreeController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
-        // éxito:201 y error:422
-        $tree = $request->user()->tree()->latest()->paginte(15);
+        $trees = $request->user()
+            ->tree()
+            ->latest()
+            ->paginate(15);
 
-        return TreeResource::collection($tree);
+        return TreeResource::collection($trees);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(TreeRequest $request)
     {
-        // 201 y 401,409, 422
-        $tree = $request->user()->tree()->create($request->validated());
+        $validated = $request->validated();
 
-        return (new TreeResource($tree->load('effect')))->response()->setStatusCode(Response::HTTP_CREATED);
+        $tree = DB::transaction(function () use ($request, $validated) {
+            $authenticatedUser = $request->user();
+
+            // Evita que dos solicitudes simultáneas superen el límite.
+            $user = User::query()
+                ->whereKey($authenticatedUser->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $activeTrees = $user->tree()
+                ->where('status', TreeStatus::ACTIVE->value)
+                ->count();
+
+            $maxActiveTrees = (int) config(
+                'greencycle.max_active_trees',
+                5
+            );
+
+            if ($activeTrees >= $maxActiveTrees) {
+                abort(
+                    Response::HTTP_CONFLICT,
+                    'TREE_LIMIT_REACHED'
+                );
+            }
+
+            $tree = new Tree();
+
+            $tree->seed_type = $validated['seed_type']
+                ?? SeedType::BASIC->value;
+
+            // Los valores iniciales los establece el servidor.
+            
+            $tree->level = 0;
+            $tree->health = config('greencycle.health_initial', 100);
+            $tree->progress = config('greencycle.progress_initial', 0);
+            $tree->status = TreeStatus::ACTIVE;
+            $tree->last_decay_at = now();
+
+
+            $tree->user()->associate($user);
+            $tree->save();
+
+            return $tree;
+        });
+
+        return (new TreeResource($tree))
+            ->response()
+            ->setStatusCode(Response::HTTP_CREATED);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Request $request, Tree $tree)
     {
-        // 200 y 401,404
         $this->ensureUserOwnsTree($request, $tree);
 
-        return new TreeResource($tree->load('effect'));
+        return new TreeResource($tree);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
-
-    private function ensureUserOwnsTree(Request $request, Tree $tree): void
-    {
-        abort_unless($tree->user_id === $request->user()->id, Response::HTTP_NOT_FOUND);
+    private function ensureUserOwnsTree(
+        Request $request,
+        Tree $tree
+    ): void {
+        abort_unless(
+            (int) $tree->user_id === (int) $request->user()->id,
+            Response::HTTP_NOT_FOUND
+        );
     }
 }
+

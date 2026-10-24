@@ -2,64 +2,65 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\TreeStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\TreeResource;
+use App\Models\Tree;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 
 class TreeCareController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function care(Request $request, Tree $tree)
     {
-        //
-    }
+        return DB::transaction(function () use ($request, $tree) {
+            // Bloqueamos el árbol para evitar cuidados simultáneos.
+            $tree = Tree::query()
+                ->whereKey($tree->id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
+            // Un usuario solo puede cuidar sus propios árboles.
+            if ((int) $tree->user_id !== (int) $request->user()->id) {
+                return response()->json([
+                    'message' => 'TREE_NOT_FOUND',
+                    'code' => 'TREE_NOT_FOUND',
+                ], Response::HTTP_NOT_FOUND);
+            }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+            // Aplicamos primero el deterioro que tenga pendiente.
+            $tree->applyDecay();
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
+            // Si el deterioro mató al árbol, no permitimos cuidarlo.
+            if ($tree->status === TreeStatus::DEAD) {
+                return response()->json([
+                    'message' => 'El árbol ha muerto.',
+                    'code' => 'TREE_DEAD',
+                ], Response::HTTP_CONFLICT);
+            }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
+            // Solo los árboles activos pueden recibir cuidados.
+            if ($tree->status !== TreeStatus::ACTIVE) {
+                return response()->json([
+                    'message' => 'El árbol no está activo.',
+                    'code' => 'TREE_NOT_ACTIVE',
+                ], Response::HTTP_CONFLICT);
+            }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
+            // Comprobamos el tiempo de espera entre cuidados.
+            if ($tree->isInCooldown()) {
+                return response()->json([
+                    'message' => 'El árbol todavía está en cooldown.',
+                    'code' => 'CARE_COOLDOWN',
+                    'retry_at' => $tree->next_care_at,
+                ], Response::HTTP_CONFLICT);
+            }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+            // Aplicamos el cuidado y guardamos el progreso.
+            $tree->applyCare();
+
+            return new TreeResource($tree->refresh());
+        });
     }
 }
