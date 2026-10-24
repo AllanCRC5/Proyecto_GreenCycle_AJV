@@ -38,9 +38,9 @@ class User extends Authenticatable
         return $this->hasMany(Purchase::class);
     }
 
-    public function tree(): HasOne
+    public function tree(): HasMany
     {
-        return $this->hasOne(Tree::class);
+        return $this->hasMany(Tree::class);
     }
 
     public function effect(): HasMany
