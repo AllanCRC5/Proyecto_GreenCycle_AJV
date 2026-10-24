@@ -14,15 +14,16 @@ return new class extends Migration
         Schema::create('trees', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-            $table->foreignId('user_id');
-            $table->integer('level');
-            $table->integer('health');
-            $table->integer('progress');
-            $table->string('status');
-            $table->timestamp('last_care_at');
-            $table->timestamp('next_care_at');
-            $table->timestamp('last_decay_at');
-            $table->timestamp('harvested_at');
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->string('seed_type');
+            $table->integer('level')->default(0);
+            $table->integer('health')->default(100);
+            $table->integer('progress')->default(0);
+            $table->string('status')->default('ACTIVE');
+            $table->timestamp('last_care_at')->nullable();
+            $table->timestamp('next_care_at')->nullable();
+            $table->timestamp('last_decay_at')->nullable();
+            $table->timestamp('harvested_at')->nullable();
         });
     }
 
@@ -33,4 +34,13 @@ return new class extends Migration
     {
         Schema::dropIfExists('trees');
     }
+
 };
+
+Schema::create('trees', function (Blueprint $table) {
+    // ... tus columnas ...
+
+    $table->index(['user_id', 'status']);        // para listar los árboles de un usuario por estado
+    $table->index(['status', 'last_decay_at']);  // para que el Scheduler encuentre los ACTIVE pendientes de deterioro
+});
+
