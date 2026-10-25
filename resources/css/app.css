@@ -1,3 +1,4 @@
+@import './trees.css';
 /* ============================================
    VARIABLES GLOBALES
    ============================================ */
@@ -11,7 +12,7 @@
     --color-surface: #fff9ef;
     --color-text: #2f3b2f;
     --color-accent: #e8c547;
-    
+
   /* Sombras */
   --shadow-card: 0 18px 45px rgb(15 23 42 / 8%);
 
