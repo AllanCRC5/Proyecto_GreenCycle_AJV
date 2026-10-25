@@ -59,7 +59,8 @@ class TreeTest extends TestCase
             'seed_type' => 'BASIC',
         ]); // intenta crear un sexto arbol
 
-        $response->assertStatus(409); // comprueba que la API responda con 409
+        $response->assertStatus(409)
+            ->assertJsonPath('code', 'TREE_LIMIT_REACHED'); // comprueba que la API responda con 409
         // 409: El código 409 indica que la solicitud entra en conflicto con una regla del sistema.
         $this->assertDatabaseCount('trees', 5); // que solo siga existiendo 5 arboles
     }
@@ -537,4 +538,18 @@ class TreeTest extends TestCase
 
         $this->assertDatabaseCount('trees', 0);
     }
+
+    public function test_user_cannot_view_another_users_tree(): void
+{
+    $user = User::factory()->create();
+    $anotherUser = User::factory()->create();
+
+    $tree = Tree::factory()->create([
+        'user_id' => $anotherUser->id,
+    ]);
+
+    $this->actingAs($user, 'sanctum')
+        ->getJson("/api/v1/trees/{$tree->id}")
+        ->assertNotFound();
+}
 }

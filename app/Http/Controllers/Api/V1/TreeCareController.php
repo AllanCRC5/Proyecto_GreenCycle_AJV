@@ -9,6 +9,7 @@ use App\Models\Tree;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 
 class TreeCareController extends Controller
 {
@@ -22,12 +23,15 @@ class TreeCareController extends Controller
                 ->firstOrFail();
 
             // Un usuario solo puede cuidar sus propios árboles.
-            if ((int) $tree->user_id !== (int) $request->user()->id) {
-                return response()->json([
-                    'message' => 'TREE_NOT_FOUND',
-                    'code' => 'TREE_NOT_FOUND',
-                ], Response::HTTP_NOT_FOUND);
-            }
+            // Verificamos que el árbol pertenezca al usuario autenticado.
+            $authorization = Gate::inspect('care', $tree);
+
+            if ($authorization->denied()) {
+            return response()->json([
+                'message' => 'TREE_NOT_FOUND',
+                'code' => 'TREE_NOT_FOUND',
+            ], Response::HTTP_NOT_FOUND);
+}
 
             // Aplicamos primero el deterioro que tenga pendiente.
             $tree->applyDecay();
