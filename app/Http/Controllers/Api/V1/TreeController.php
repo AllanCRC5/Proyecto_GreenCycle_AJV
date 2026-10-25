@@ -34,7 +34,6 @@ class TreeController extends Controller
         return TreeResource::collection($trees);
     }
 
-
     public function store(TreeRequest $request)
     {
         $validated = $request->validated();
@@ -60,7 +59,7 @@ class TreeController extends Controller
                 return null;
             }
 
-            $tree = new Tree();
+            $tree = new Tree;
 
             $tree->seed_type = $validated['seed_type']
                 ?? SeedType::BASIC->value;
@@ -89,12 +88,10 @@ class TreeController extends Controller
             ->setStatusCode(Response::HTTP_CREATED);
     }
 
-
     public function show(Tree $tree)
-{
-    Gate::authorize('view', $tree);
+    {
+        Gate::authorize('view', $tree);
 
-    return new TreeResource($tree);
-}
-
+        return new TreeResource($tree);
+    }
 }

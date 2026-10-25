@@ -540,16 +540,16 @@ class TreeTest extends TestCase
     }
 
     public function test_user_cannot_view_another_users_tree(): void
-{
-    $user = User::factory()->create();
-    $anotherUser = User::factory()->create();
+    {
+        $user = User::factory()->create();
+        $anotherUser = User::factory()->create();
 
-    $tree = Tree::factory()->create([
-        'user_id' => $anotherUser->id,
-    ]);
+        $tree = Tree::factory()->create([
+            'user_id' => $anotherUser->id,
+        ]);
 
-    $this->actingAs($user, 'sanctum')
-        ->getJson("/api/v1/trees/{$tree->id}")
-        ->assertNotFound();
-}
+        $this->actingAs($user, 'sanctum')
+            ->getJson("/api/v1/trees/{$tree->id}")
+            ->assertNotFound();
+    }
 }

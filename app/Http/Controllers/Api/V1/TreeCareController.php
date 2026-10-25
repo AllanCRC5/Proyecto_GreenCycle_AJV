@@ -15,7 +15,7 @@ class TreeCareController extends Controller
 {
     public function care(Request $request, Tree $tree)
     {
-        return DB::transaction(function () use ($request, $tree) {
+        return DB::transaction(function () use ($tree) {
             // Bloqueamos el árbol para evitar cuidados simultáneos.
             $tree = Tree::query()
                 ->whereKey($tree->id)
@@ -27,11 +27,11 @@ class TreeCareController extends Controller
             $authorization = Gate::inspect('care', $tree);
 
             if ($authorization->denied()) {
-            return response()->json([
-                'message' => 'TREE_NOT_FOUND',
-                'code' => 'TREE_NOT_FOUND',
-            ], Response::HTTP_NOT_FOUND);
-}
+                return response()->json([
+                    'message' => 'TREE_NOT_FOUND',
+                    'code' => 'TREE_NOT_FOUND',
+                ], Response::HTTP_NOT_FOUND);
+            }
 
             // Aplicamos primero el deterioro que tenga pendiente.
             $tree->applyDecay();
