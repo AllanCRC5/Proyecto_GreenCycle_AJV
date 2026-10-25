@@ -4,10 +4,10 @@ namespace Tests\Feature;
 
 use App\Models\Tree;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
-use Carbon\Carbon;
 
 class TreeTest extends TestCase
 {
@@ -113,44 +113,44 @@ class TreeTest extends TestCase
     // Recupera vida, aumenta el progreso y registra las fechas.
     // Impedir cuidados durante el cooldown
     // Devuelve 409 y CARE_COOLDOWN sin modificar la vida ni el progreso.
-    
-public function test_user_cannot_care_for_tree_during_cooldown(): void
-{
-    Carbon::setTestNow(Carbon::parse('2026-10-25 10:00:00'));
 
-    try {
-        $user = User::factory()->create();
+    public function test_user_cannot_care_for_tree_during_cooldown(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-10-25 10:00:00'));
 
-        Sanctum::actingAs($user);
+        try {
+            $user = User::factory()->create();
 
-        $tree = Tree::factory()->create([
-            'user_id' => $user->id,
-            'seed_type' => 'BASIC',
-            'status' => 'ACTIVE',
-            'level' => 0,
-            'health' => 60,
-            'progress' => 0,
-            'last_care_at' => now()->subMinutes(10),
-            'next_care_at' => now()->addMinutes(50),
-            'last_decay_at' => now(),
-        ]);
+            Sanctum::actingAs($user);
 
-        $response = $this->postJson(
-            "/api/v1/trees/{$tree->id}/care"
-        );
+            $tree = Tree::factory()->create([
+                'user_id' => $user->id,
+                'seed_type' => 'BASIC',
+                'status' => 'ACTIVE',
+                'level' => 0,
+                'health' => 60,
+                'progress' => 0,
+                'last_care_at' => now()->subMinutes(10),
+                'next_care_at' => now()->addMinutes(50),
+                'last_decay_at' => now(),
+            ]);
 
-        $response->assertStatus(409)
-            ->assertJsonPath('code', 'CARE_COOLDOWN');
+            $response = $this->postJson(
+                "/api/v1/trees/{$tree->id}/care"
+            );
 
-        $this->assertDatabaseHas('trees', [
-            'id' => $tree->id,
-            'health' => 60,
-            'progress' => 0,
-        ]);
-    } finally {
-        Carbon::setTestNow();
+            $response->assertStatus(409)
+                ->assertJsonPath('code', 'CARE_COOLDOWN');
+
+            $this->assertDatabaseHas('trees', [
+                'id' => $tree->id,
+                'health' => 60,
+                'progress' => 0,
+            ]);
+        } finally {
+            Carbon::setTestNow();
+        }
     }
-}
 
     // Si el arbol muere, ya no se puede cuidar
     // Devuelve 409 y TREE_DEAD, sin revivir el árbo
@@ -265,104 +265,102 @@ public function test_user_cannot_care_for_tree_during_cooldown(): void
     // Impedir cuidar árboles maduros.
 
     // después de 1440 minutos (24 horas), un árbol con 100 de vida pierde 20 puntos y queda con 80.
-    
-public function test_tree_loses_health_after_decay_interval(): void
-{
-    Carbon::setTestNow(Carbon::parse('2026-10-25 10:00:00'));
 
-    try {
-        $user = User::factory()->create();
+    public function test_tree_loses_health_after_decay_interval(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-10-25 10:00:00'));
 
-        $tree = Tree::factory()->create([
-            'user_id' => $user->id,
-            'status' => 'ACTIVE',
-            'health' => 100,
-            'created_at' => now(),
-            'last_care_at' => null,
-            'last_decay_at' => null,
-        ]);
+        try {
+            $user = User::factory()->create();
 
-        // Avanzamos el reloj 24 horas.
-        Carbon::setTestNow(
-            Carbon::parse('2026-10-26 10:00:00')
-        );
+            $tree = Tree::factory()->create([
+                'user_id' => $user->id,
+                'status' => 'ACTIVE',
+                'health' => 100,
+                'created_at' => now(),
+                'last_care_at' => null,
+                'last_decay_at' => null,
+            ]);
 
-        $tree->applyDecay();
-        $tree->refresh();
+            // Avanzamos el reloj 24 horas.
+            Carbon::setTestNow(
+                Carbon::parse('2026-10-26 10:00:00')
+            );
 
-        $this->assertEquals(80, $tree->health);
-    } finally {
-        Carbon::setTestNow();
+            $tree->applyDecay();
+            $tree->refresh();
+
+            $this->assertEquals(80, $tree->health);
+        } finally {
+            Carbon::setTestNow();
+        }
     }
-}
-
 
     // Después de 24 horas: la salud baja de 100 a 80.
     // Antes de las 24 horas: la salud se mantiene en 100.
-    
-public function test_tree_does_not_lose_health_before_decay_interval(): void
-{
-    Carbon::setTestNow(Carbon::parse('2026-10-25 10:00:00'));
 
-    try {
-        $user = User::factory()->create();
+    public function test_tree_does_not_lose_health_before_decay_interval(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-10-25 10:00:00'));
 
-        $tree = Tree::factory()->create([
-            'user_id' => $user->id,
-            'status' => 'ACTIVE',
-            'health' => 100,
-            'created_at' => now(),
-            'last_care_at' => null,
-            'last_decay_at' => null,
-        ]);
+        try {
+            $user = User::factory()->create();
 
-        // Solo han pasado 12 horas.
-        Carbon::setTestNow(
-            Carbon::parse('2026-10-25 22:00:00')
-        );
+            $tree = Tree::factory()->create([
+                'user_id' => $user->id,
+                'status' => 'ACTIVE',
+                'health' => 100,
+                'created_at' => now(),
+                'last_care_at' => null,
+                'last_decay_at' => null,
+            ]);
 
-        $tree->applyDecay();
-        $tree->refresh();
+            // Solo han pasado 12 horas.
+            Carbon::setTestNow(
+                Carbon::parse('2026-10-25 22:00:00')
+            );
 
-        $this->assertEquals(100, $tree->health);
-    } finally {
-        Carbon::setTestNow();
+            $tree->applyDecay();
+            $tree->refresh();
+
+            $this->assertEquals(100, $tree->health);
+        } finally {
+            Carbon::setTestNow();
+        }
     }
-}
-
 
     // Que el árbol pierde los 20 puntos de salud que le quedan y, al llegar a cero, su estado cambia automáticamente a DEAD.
-    
-public function test_tree_dies_when_health_reaches_zero(): void
-{
-    Carbon::setTestNow(Carbon::parse('2026-10-25 10:00:00'));
 
-    try {
-        $user = User::factory()->create();
+    public function test_tree_dies_when_health_reaches_zero(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-10-25 10:00:00'));
 
-        $tree = Tree::factory()->create([
-            'user_id' => $user->id,
-            'status' => 'ACTIVE',
-            'health' => 20,
-            'created_at' => now(),
-            'last_care_at' => null,
-            'last_decay_at' => null,
-        ]);
+        try {
+            $user = User::factory()->create();
 
-        // Avanzamos 24 horas.
-        Carbon::setTestNow(
-            Carbon::parse('2026-10-26 10:00:00')
-        );
+            $tree = Tree::factory()->create([
+                'user_id' => $user->id,
+                'status' => 'ACTIVE',
+                'health' => 20,
+                'created_at' => now(),
+                'last_care_at' => null,
+                'last_decay_at' => null,
+            ]);
 
-        $tree->applyDecay();
-        $tree->refresh();
+            // Avanzamos 24 horas.
+            Carbon::setTestNow(
+                Carbon::parse('2026-10-26 10:00:00')
+            );
 
-        $this->assertEquals(0, $tree->health);
-        $this->assertEquals('DEAD', $tree->status->value);
-    } finally {
-        Carbon::setTestNow();
+            $tree->applyDecay();
+            $tree->refresh();
+
+            $this->assertEquals(0, $tree->health);
+            $this->assertEquals('DEAD', $tree->status->value);
+        } finally {
+            Carbon::setTestNow();
+        }
     }
-}
 
     // El árbol pierde salud después de 24 horas.
     // El árbol no pierde salud antes de las 24 horas.
@@ -391,43 +389,42 @@ public function test_tree_dies_when_health_reaches_zero(): void
     }
 
     // Si se ejecuta el comando dos veces seguidas, el árbol no pierda otros 20 puntos de salud por el mismo periodo de 24 horas
-    
-public function test_tree_does_not_apply_decay_twice_for_same_period(): void
-{
-    Carbon::setTestNow(Carbon::parse('2026-10-25 10:00:00'));
 
-    try {
-        $user = User::factory()->create();
+    public function test_tree_does_not_apply_decay_twice_for_same_period(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-10-25 10:00:00'));
 
-        $tree = Tree::factory()->create([
-            'user_id' => $user->id,
-            'status' => 'ACTIVE',
-            'health' => 100,
-            'created_at' => now(),
-            'last_care_at' => null,
-            'last_decay_at' => null,
-        ]);
+        try {
+            $user = User::factory()->create();
 
-        // Después de 24 horas, pierde 20 puntos.
-        Carbon::setTestNow(
-            Carbon::parse('2026-10-26 10:00:00')
-        );
+            $tree = Tree::factory()->create([
+                'user_id' => $user->id,
+                'status' => 'ACTIVE',
+                'health' => 100,
+                'created_at' => now(),
+                'last_care_at' => null,
+                'last_decay_at' => null,
+            ]);
 
-        $tree->applyDecay();
-        $tree->refresh();
+            // Después de 24 horas, pierde 20 puntos.
+            Carbon::setTestNow(
+                Carbon::parse('2026-10-26 10:00:00')
+            );
 
-        $this->assertEquals(80, $tree->health);
+            $tree->applyDecay();
+            $tree->refresh();
 
-        // Ejecutamos otra vez sin avanzar el reloj.
-        $tree->applyDecay();
-        $tree->refresh();
+            $this->assertEquals(80, $tree->health);
 
-        $this->assertEquals(80, $tree->health);
-    } finally {
-        Carbon::setTestNow();
+            // Ejecutamos otra vez sin avanzar el reloj.
+            $tree->applyDecay();
+            $tree->refresh();
+
+            $this->assertEquals(80, $tree->health);
+        } finally {
+            Carbon::setTestNow();
+        }
     }
-}
-
 
     // El arbol comienza en 0, con progreso 4,
     public function test_caring_for_tree_increases_level_and_resets_progress(): void
