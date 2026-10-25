@@ -15,6 +15,14 @@ use Illuminate\Support\Facades\DB;
 
 class TreeController extends Controller
 {
+    /*
+    index() lista los árboles del usuario autenticado y pagina los resultados.
+    store() utiliza una transacción y lockForUpdate() para proteger el límite de árboles activos.
+    El límite se obtiene de config/greencycle.php.
+    Los valores iniciales del árbol los establece el servidor.
+    La creación devuelve HTTP 201 Created.
+    show() impide consultar árboles de otros usuarios y responde con 404.
+    */
     public function index(Request $request)
     {
         $trees = $request->user()

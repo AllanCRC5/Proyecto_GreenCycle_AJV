@@ -29,11 +29,18 @@ Route::prefix('v1')
 
             Route::post('me', [AuthController::class, 'me'])
                 ->name('me');
-            // POST, GET, PUT, DELETE de los arboles.
-            Route::apiResource('tree', TreeController::class);
+            // POST, GET Y SHOW de los arboles.
+            Route::get('trees', [TreeController::class, 'index'])
+                ->name('trees.index');
 
-            Route::post('tree/{tree}/care', [TreeCareController::class, 'care'])
-                ->name('tree.care');
+            Route::post('trees', [TreeController::class, 'store'])
+                ->name('trees.store');
+
+            Route::get('trees/{tree}', [TreeController::class, 'show'])
+                ->name('trees.show');
+
+            Route::post('trees/{tree}/care', [TreeCareController::class, 'care'])
+                ->name('trees.care');
         });
 
     });
