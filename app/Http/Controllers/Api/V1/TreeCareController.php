@@ -9,12 +9,13 @@ use App\Models\Tree;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 
 class TreeCareController extends Controller
 {
     public function care(Request $request, Tree $tree)
     {
-        return DB::transaction(function () use ($request, $tree) {
+        return DB::transaction(function () use ($tree) {
             // Bloqueamos el árbol para evitar cuidados simultáneos.
             $tree = Tree::query()
                 ->whereKey($tree->id)
@@ -22,7 +23,10 @@ class TreeCareController extends Controller
                 ->firstOrFail();
 
             // Un usuario solo puede cuidar sus propios árboles.
-            if ((int) $tree->user_id !== (int) $request->user()->id) {
+            // Verificamos que el árbol pertenezca al usuario autenticado.
+            $authorization = Gate::inspect('care', $tree);
+
+            if ($authorization->denied()) {
                 return response()->json([
                     'message' => 'TREE_NOT_FOUND',
                     'code' => 'TREE_NOT_FOUND',

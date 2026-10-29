@@ -12,13 +12,22 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 
 class TreeController extends Controller
 {
+    /*
+    index() lista los árboles del usuario autenticado y pagina los resultados.
+    store() utiliza una transacción y lockForUpdate() para proteger el límite de árboles activos.
+    El límite se obtiene de config/greencycle.php.
+    Los valores iniciales del árbol los establece el servidor.
+    La creación devuelve HTTP 201 Created.
+    show() impide consultar árboles de otros usuarios y responde con 404.
+    */
     public function index(Request $request)
     {
         $trees = $request->user()
-            ->tree()
+            ->trees()
             ->latest()
             ->paginate(15);
 
@@ -29,16 +38,15 @@ class TreeController extends Controller
     {
         $validated = $request->validated();
 
-        $tree = DB::transaction(function () use ($request, $validated) {
+        $result = DB::transaction(function () use ($request, $validated) {
             $authenticatedUser = $request->user();
 
-            // Evita que dos solicitudes simultáneas superen el límite.
             $user = User::query()
                 ->whereKey($authenticatedUser->id)
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            $activeTrees = $user->tree()
+            $activeTrees = $user->trees()
                 ->where('status', TreeStatus::ACTIVE->value)
                 ->count();
 
@@ -48,18 +56,13 @@ class TreeController extends Controller
             );
 
             if ($activeTrees >= $maxActiveTrees) {
-                abort(
-                    Response::HTTP_CONFLICT,
-                    'TREE_LIMIT_REACHED'
-                );
+                return null;
             }
 
             $tree = new Tree;
 
             $tree->seed_type = $validated['seed_type']
                 ?? SeedType::BASIC->value;
-
-            // Los valores iniciales los establece el servidor.
 
             $tree->level = 0;
             $tree->health = config('greencycle.health_initial', 100);
@@ -73,25 +76,22 @@ class TreeController extends Controller
             return $tree;
         });
 
-        return (new TreeResource($tree))
+        if ($result === null) {
+            return response()->json([
+                'code' => 'TREE_LIMIT_REACHED',
+                'message' => 'Has alcanzado el límite de árboles activos.',
+            ], 409);
+        }
+
+        return (new TreeResource($result))
             ->response()
             ->setStatusCode(Response::HTTP_CREATED);
     }
 
-    public function show(Request $request, Tree $tree)
+    public function show(Tree $tree)
     {
-        $this->ensureUserOwnsTree($request, $tree);
+        Gate::authorize('view', $tree);
 
         return new TreeResource($tree);
-    }
-
-    private function ensureUserOwnsTree(
-        Request $request,
-        Tree $tree
-    ): void {
-        abort_unless(
-            (int) $tree->user_id === (int) $request->user()->id,
-            Response::HTTP_NOT_FOUND
-        );
     }
 }
