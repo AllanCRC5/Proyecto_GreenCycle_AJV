@@ -620,7 +620,7 @@ class TreeTest extends TestCase
         }
     }
 
-    // El arbol comienza en 0, con progreso 4,
+    // El árbol comienza en nivel 0, con progreso 4 y salud 100.
     public function test_caring_for_tree_increases_level_and_resets_progress(): void
     {
         $user = User::factory()->create();
@@ -646,13 +646,15 @@ class TreeTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('data.level', 1)
             ->assertJsonPath('data.progress', 0)
-            ->assertJsonPath('data.status', 'ACTIVE');
+            ->assertJsonPath('data.status', 'ACTIVE')
+            ->assertJsonPath('data.health', 100);
 
         $this->assertDatabaseHas('trees', [
             'id' => $tree->id,
             'level' => 1,
             'progress' => 0,
             'status' => 'ACTIVE',
+            'health' => 100,
         ]);
     }
 
@@ -810,5 +812,225 @@ class TreeTest extends TestCase
         ]);
 
         Carbon::setTestNow();
+    }
+
+    public function test_user_cannot_care_for_tree_that_dies_from_pending_decay(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-10-26 10:00:00'));
+
+        try {
+            config([
+                'greencycle.decay_interval_minutes' => 5,
+                'greencycle.decay_amount' => 20,
+            ]);
+
+            $user = User::factory()->create();
+
+            Sanctum::actingAs($user);
+
+            $tree = Tree::factory()->create([
+                'user_id' => $user->id,
+                'seed_type' => 'BASIC',
+                'status' => 'ACTIVE',
+                'level' => 0,
+                'health' => 20,
+                'progress' => 0,
+                'created_at' => now()->subMinutes(5),
+                'last_care_at' => null,
+                'next_care_at' => null,
+                'last_decay_at' => now()->subMinutes(5),
+            ]);
+
+            $response = $this->postJson(
+                "/api/v1/trees/{$tree->id}/care"
+            );
+
+            $response->assertStatus(409)
+                ->assertJsonPath('code', 'TREE_DEAD');
+
+            $this->assertDatabaseHas('trees', [
+                'id' => $tree->id,
+                'health' => 0,
+                'progress' => 0,
+                'status' => 'DEAD',
+            ]);
+
+            $this->assertDatabaseMissing('trees', [
+                'id' => $tree->id,
+                'last_care_at' => now()->toDateTimeString(),
+            ]);
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
+    // que los árboles MATURE y DEAD no impiden crear otro árbol, porque solamente cuentan los que están ACTIVE
+    public function test_mature_and_dead_trees_do_not_count_toward_active_tree_limit(): void
+    {
+        config([
+            'greencycle.max_active_trees' => 2,
+        ]);
+
+        $user = User::factory()->create();
+
+        Sanctum::actingAs($user);
+
+        Tree::factory()->create([
+            'user_id' => $user->id,
+            'status' => 'ACTIVE',
+        ]);
+
+        Tree::factory()->create([
+            'user_id' => $user->id,
+            'status' => 'MATURE',
+        ]);
+
+        Tree::factory()->create([
+            'user_id' => $user->id,
+            'status' => 'DEAD',
+        ]);
+
+        $response = $this->postJson('/api/v1/trees', [
+            'seed_type' => 'BASIC',
+        ]);
+
+        $response->assertCreated();
+
+        $this->assertDatabaseCount('trees', 4);
+    }
+
+    // que el usuario puede consultar individualmente un árbol que le pertenece y recibir sus datos correctamente.
+    public function test_user_can_view_their_own_tree(): void
+    {
+        $user = User::factory()->create();
+
+        Sanctum::actingAs($user);
+
+        $tree = Tree::factory()->create([
+            'user_id' => $user->id,
+            'seed_type' => 'BASIC',
+            'status' => 'ACTIVE',
+            'level' => 2,
+            'health' => 80,
+            'progress' => 3,
+        ]);
+
+        $response = $this->getJson(
+            "/api/v1/trees/{$tree->id}"
+        );
+
+        $response->assertOk()
+            ->assertJsonPath('data.id', $tree->id)
+            ->assertJsonPath('data.seed_type', 'BASIC')
+            ->assertJsonPath('data.level', 2)
+            ->assertJsonPath('data.health', 80)
+            ->assertJsonPath('data.progress', 3)
+            ->assertJsonPath('data.status', 'ACTIVE');
+    }
+
+    // que la API no solamente devuelve retry_at, sino que devuelve la fecha correcta almacenada en next_care_at
+    public function test_cooldown_returns_exact_retry_at_date(): void
+    {
+        Carbon::setTestNow(
+            Carbon::parse('2026-10-25 10:00:00')
+        );
+
+        try {
+            $user = User::factory()->create();
+
+            Sanctum::actingAs($user);
+
+            $retryAt = now()->addMinutes(50);
+
+            $tree = Tree::factory()->create([
+                'user_id' => $user->id,
+                'status' => 'ACTIVE',
+                'health' => 60,
+                'progress' => 0,
+                'last_care_at' => now()->subMinutes(10),
+                'next_care_at' => $retryAt,
+                'last_decay_at' => now(),
+            ]);
+
+            $response = $this->postJson(
+                "/api/v1/trees/{$tree->id}/care"
+            );
+
+            $response->assertStatus(409)
+                ->assertJsonPath('code', 'CARE_COOLDOWN')
+                ->assertJsonPath(
+                    'retry_at',
+                    $retryAt->toISOString()
+                );
+
+            $this->assertDatabaseHas('trees', [
+                'id' => $tree->id,
+                'health' => 60,
+                'progress' => 0,
+            ]);
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
+    // que el árbol comienza a deteriorarse tomando como referencia el último cuidado, en lugar de utilizar una fecha anterior.
+    public function test_decay_preserves_remaining_minutes_between_intervals(): void
+    {
+        Carbon::setTestNow(
+            Carbon::parse('2026-10-25 10:00:00')
+        );
+
+        try {
+            config([
+                'greencycle.decay_interval_minutes' => 5,
+                'greencycle.decay_amount' => 20,
+            ]);
+
+            $user = User::factory()->create();
+
+            $tree = Tree::factory()->create([
+                'user_id' => $user->id,
+                'status' => 'ACTIVE',
+                'health' => 100,
+                'created_at' => now()->subMinutes(20),
+                'last_care_at' => null,
+                'last_decay_at' => now()->subMinutes(20),
+            ]);
+
+            // Primera ejecución: han transcurrido 20 minutos.
+            $tree->applyDecay();
+
+            $tree->refresh();
+
+            $this->assertEquals(20, $tree->health);
+
+            $this->assertEquals(
+                now()->timestamp,
+                $tree->last_decay_at->timestamp
+            );
+
+            // Avanzamos solamente 4 minutos.
+            Carbon::setTestNow(now()->addMinutes(4));
+
+            $tree->applyDecay();
+
+            $tree->refresh();
+
+            // Todavía no se completa otro intervalo.
+            $this->assertEquals(20, $tree->health);
+
+            // Avanzamos un minuto más.
+            Carbon::setTestNow(now()->addMinute());
+
+            $tree->applyDecay();
+
+            $tree->refresh();
+
+            // Se completa otro intervalo de 5 minutos.
+            $this->assertEquals(0, $tree->health);
+            $this->assertEquals('DEAD', $tree->status->value);
+        } finally {
+            Carbon::setTestNow();
+        }
     }
 }
