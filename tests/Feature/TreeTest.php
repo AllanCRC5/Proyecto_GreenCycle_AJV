@@ -119,7 +119,48 @@ class TreeTest extends TestCase
     {
         Carbon::setTestNow(Carbon::parse('2026-10-25 10:00:00'));
 
+        $user = User::factory()->create();
+
+        $tree = Tree::factory()->create([
+            'user_id' => $user->id,
+            'health' => 60,
+            'progress' => 0,
+            'status' => 'ACTIVE',
+            'last_care_at' => now()->subMinutes(10),
+            'next_care_at' => now()->addMinutes(50),
+            'last_decay_at' => now(),
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $response = $this->postJson("/api/v1/trees/{$tree->id}/care");
+
+        $response->assertStatus(409)
+            ->assertJsonPath('code', 'CARE_COOLDOWN')
+            ->assertJsonStructure([
+                'code',
+                'message',
+                'retry_at',
+            ]);
+
+        $this->assertDatabaseHas('trees', [
+            'id' => $tree->id,
+            'health' => 60,
+            'progress' => 0,
+        ]);
+
+        Carbon::setTestNow();
+    }
+
+    public function test_cooldown_does_not_modify_tree_with_pending_decay(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-10-25 10:00:00'));
+
         try {
+            config([
+                'greencycle.decay_interval_minutes' => 5,
+            ]);
+
             $user = User::factory()->create();
 
             Sanctum::actingAs($user);
@@ -133,7 +174,7 @@ class TreeTest extends TestCase
                 'progress' => 0,
                 'last_care_at' => now()->subMinutes(10),
                 'next_care_at' => now()->addMinutes(50),
-                'last_decay_at' => now(),
+                'last_decay_at' => now()->subMinutes(20),
             ]);
 
             $response = $this->postJson(
@@ -147,7 +188,155 @@ class TreeTest extends TestCase
                 'id' => $tree->id,
                 'health' => 60,
                 'progress' => 0,
+                'status' => 'ACTIVE',
             ]);
+
+            $tree->refresh();
+
+            $this->assertEquals(
+                now()->subMinutes(20)->timestamp,
+                $tree->last_decay_at->timestamp
+            );
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
+    public function test_guest_cannot_view_trees(): void
+    {
+        $response = $this->getJson('/api/v1/trees');
+
+        $response->assertUnauthorized();
+    }
+
+    public function test_guest_cannot_create_tree(): void
+    {
+        $response = $this->postJson('/api/v1/trees', [
+            'seed_type' => 'BASIC',
+        ]);
+
+        $response->assertUnauthorized();
+
+        $this->assertDatabaseCount('trees', 0);
+    }
+
+    public function test_guest_cannot_care_for_tree(): void
+    {
+        $user = User::factory()->create();
+
+        $tree = Tree::factory()->create([
+            'user_id' => $user->id,
+            'seed_type' => 'BASIC',
+            'status' => 'ACTIVE',
+        ]);
+
+        $response = $this->postJson(
+            "/api/v1/trees/{$tree->id}/care"
+        );
+
+        $response->assertUnauthorized();
+
+        $this->assertDatabaseHas('trees', [
+            'id' => $tree->id,
+            'status' => 'ACTIVE',
+        ]);
+    }
+
+    public function test_user_can_only_view_their_own_trees(): void
+    {
+        $user = User::factory()->create();
+        $anotherUser = User::factory()->create();
+
+        Sanctum::actingAs($user);
+
+        Tree::factory()->count(2)->create([
+            'user_id' => $user->id,
+        ]);
+
+        Tree::factory()->count(3)->create([
+            'user_id' => $anotherUser->id,
+        ]);
+
+        $response = $this->getJson('/api/v1/trees');
+
+        $response->assertOk()
+            ->assertJsonCount(2, 'data');
+
+        $treeIds = collect($response->json('data'))
+            ->pluck('id');
+
+        $this->assertCount(2, $treeIds);
+
+        $this->assertDatabaseCount('trees', 5);
+    }
+
+    // Que applyDecay() no se limite a descontar 20 puntos una sola vez. Debe reconocer los tres intervalos completos y descontar 60 puntos en total.
+    public function test_tree_applies_decay_for_multiple_intervals(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-10-25 10:00:00'));
+
+        try {
+            $user = User::factory()->create();
+
+            $tree = Tree::factory()->create([
+                'user_id' => $user->id,
+                'status' => 'ACTIVE',
+                'health' => 100,
+                'created_at' => now(),
+                'last_care_at' => null,
+                'last_decay_at' => null,
+            ]);
+
+            // Avanzamos 72 horas.
+            Carbon::setTestNow(
+                Carbon::parse('2026-10-28 10:00:00')
+            );
+
+            $tree->applyDecay();
+            $tree->refresh();
+
+            $this->assertEquals(40, $tree->health);
+
+            $this->assertEquals(
+                now()->timestamp,
+                $tree->last_decay_at->timestamp
+            );
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
+    public function test_decay_command_does_not_apply_decay_twice(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-10-25 10:00:00'));
+
+        try {
+            $user = User::factory()->create();
+
+            $tree = Tree::factory()->create([
+                'user_id' => $user->id,
+                'status' => 'ACTIVE',
+                'health' => 100,
+                'created_at' => now()->subMinutes(1440),
+                'last_care_at' => null,
+                'last_decay_at' => null,
+            ]);
+
+            // Primera ejecución.
+            $this->artisan('trees:apply-decay')
+                ->assertSuccessful();
+
+            $tree->refresh();
+
+            $this->assertEquals(80, $tree->health);
+
+            // Segunda ejecución sin avanzar el reloj.
+            $this->artisan('trees:apply-decay')
+                ->assertSuccessful();
+
+            $tree->refresh();
+
+            $this->assertEquals(80, $tree->health);
         } finally {
             Carbon::setTestNow();
         }
@@ -178,7 +367,7 @@ class TreeTest extends TestCase
             "/api/v1/trees/{$tree->id}/care"
         );
 
-        $response->assertStatus(409)
+        $response->assertConflict()
             ->assertJsonPath('code', 'TREE_DEAD');
 
         $this->assertDatabaseHas('trees', [
@@ -214,7 +403,11 @@ class TreeTest extends TestCase
         );
 
         $response->assertNotFound()
-            ->assertJsonPath('code', 'TREE_NOT_FOUND');
+            ->assertJsonPath('code', 'NOT_FOUND')
+            ->assertJsonStructure([
+                'code',
+                'message',
+            ]);
 
         $this->assertDatabaseHas('trees', [
             'id' => $tree->id,
@@ -548,8 +741,74 @@ class TreeTest extends TestCase
             'user_id' => $anotherUser->id,
         ]);
 
-        $this->actingAs($user, 'sanctum')
-            ->getJson("/api/v1/trees/{$tree->id}")
-            ->assertNotFound();
+        $response = $this->actingAs($user, 'sanctum')
+            ->getJson("/api/v1/trees/{$tree->id}");
+
+        $response->assertNotFound()
+            ->assertJson([
+                'code' => 'NOT_FOUND',
+            ])
+            ->assertJsonStructure([
+                'code',
+                'message',
+            ]);
+    }
+
+    public function test_user_cannot_view_nonexistent_tree(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->getJson('/api/v1/trees/999999');
+
+        $response->assertNotFound()
+            ->assertJsonPath('code', 'NOT_FOUND')
+            ->assertJsonStructure([
+                'code',
+                'message',
+            ]);
+    }
+
+    public function test_decay_command_does_not_modify_non_active_trees(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-10-25 10:00:00'));
+
+        config([
+            'greencycle.decay_interval_minutes' => 5,
+            'greencycle.decay_amount' => 20,
+        ]);
+
+        $user = User::factory()->create();
+
+        $matureTree = Tree::factory()->create([
+            'user_id' => $user->id,
+            'health' => 80,
+            'status' => 'MATURE',
+            'last_decay_at' => now()->subMinutes(10),
+        ]);
+
+        $deadTree = Tree::factory()->create([
+            'user_id' => $user->id,
+            'health' => 0,
+            'status' => 'DEAD',
+            'last_decay_at' => now()->subMinutes(10),
+        ]);
+
+        $this->artisan('trees:apply-decay')
+            ->assertExitCode(0);
+
+        $this->assertDatabaseHas('trees', [
+            'id' => $matureTree->id,
+            'health' => 80,
+            'status' => 'MATURE',
+        ]);
+
+        $this->assertDatabaseHas('trees', [
+            'id' => $deadTree->id,
+            'health' => 0,
+            'status' => 'DEAD',
+        ]);
+
+        Carbon::setTestNow();
     }
 }
