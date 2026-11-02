@@ -416,3 +416,137 @@ https://github.com/AllanCRC5/Proyecto_GreenCycle_AJV.git
 Este proyecto fue desarrollado con fines académicos.
 
 <!-- branch protection test -->
+ 
+
+## GreenCycle — Sprint 2
+
+### Descripción
+
+GreenCycle es una aplicación desarrollada con Laravel que permite a los usuarios gestionar árboles virtuales. Cada árbol tiene un tipo de semilla, nivel, salud, progreso y estado.
+
+Durante el Sprint 2 se implementó la funcionalidad principal para:
+
+- Consultar los árboles de un usuario.
+- Plantar árboles.
+- Consultar un árbol específico.
+- Cuidar árboles.
+- Controlar los tiempos de espera entre cuidados.
+- Aplicar el deterioro automático de la salud.
+- Cambiar el estado de los árboles según su salud y progreso.
+- Gestionar los límites de árboles activos por usuario.
+
+### Configuración de GreenCycle
+
+Los parámetros del sistema se encuentran centralizados en:
+
+```text
+config/greencycle.php
+```
+
+Los valores predeterminados son:
+
+| Parámetro | Valor predeterminado | Descripción |
+|---|---:|---|
+| `max_active_trees` | 5 | Máximo de árboles activos por usuario. |
+| `max_level` | 10 | Nivel máximo de un árbol. |
+| `health_initial` | 100 | Salud inicial de un árbol. |
+| `health_max` | 100 | Salud máxima de un árbol. |
+| `care_heal` | 20 | Salud recuperada al cuidar un árbol. |
+| `progress_initial` | 0 | Progreso inicial del árbol. |
+| `care_cooldown_minutes` | 60 | Minutos de espera entre cuidados. |
+| `decay_interval_minutes` | 1440 | Intervalo de deterioro de la salud. |
+| `decay_amount` | 20 | Salud perdida por cada intervalo de deterioro. |
+
+Estos valores pueden configurarse mediante variables de entorno en el archivo `.env`.
+
+Ejemplo:
+
+```dotenv
+GREENCYCLE_MAX_ACTIVE_TREES=5
+GREENCYCLE_MAX_LEVEL=10
+GREENCYCLE_HEALTH_INITIAL=100
+GREENCYCLE_HEALTH_MAX=100
+GREENCYCLE_CARE_HEAL=20
+GREENCYCLE_PROGRESS_INITIAL=0
+GREENCYCLE_CARE_COOLDOWN_MINUTES=60
+GREENCYCLE_DECAY_INTERVAL_MINUTES=1440
+GREENCYCLE_DECAY_AMOUNT=20
+```
+
+Después de modificar la configuración, se recomienda limpiar la configuración almacenada:
+
+```bash
+php artisan optimize:clear
+```
+
+### API de GreenCycle
+
+Las rutas de la API utilizan el prefijo:
+
+```text
+/api/v1
+```
+
+Las operaciones relacionadas con árboles requieren autenticación mediante Laravel Sanctum.
+
+| Método | Endpoint | Descripción |
+|---|---|---|
+| GET | `/api/v1/trees` | Consultar los árboles del usuario autenticado. |
+| POST | `/api/v1/trees` | Plantar un árbol. |
+| GET | `/api/v1/trees/{tree}` | Consultar un árbol específico. |
+| POST | `/api/v1/trees/{tree}/care` | Cuidar un árbol. |
+
+Las respuestas de la API utilizan recursos de Laravel para estructurar los datos y mantener un formato consistente.
+
+### Estados de los árboles
+
+Los árboles pueden presentar los siguientes estados:
+
+| Estado | Descripción |
+|---|---|
+| `ACTIVE` | El árbol puede recibir cuidados y continuar creciendo. |
+| `MATURE` | El árbol alcanzó el nivel máximo. |
+| `DEAD` | La salud del árbol llegó a cero. |
+| `HARVESTED` | El árbol fue cosechado. |
+
+### Decaimiento automático
+
+El deterioro de la salud de los árboles se ejecuta mediante el comando:
+
+```bash
+php artisan trees:apply-decay
+```
+
+El comando revisa los árboles activos y aplica el deterioro correspondiente según el tiempo transcurrido.
+
+La tarea está registrada en el programador de Laravel para ejecutarse cada minuto:
+
+```php
+Schedule::command('trees:apply-decay')
+    ->everyMinute()
+    ->withoutOverlapping();
+```
+
+Para ejecutar el programador durante el desarrollo local:
+
+```bash
+php artisan schedule:work
+```
+
+En producción debe configurarse el mecanismo de ejecución del programador de Laravel en el servidor.
+
+### Pruebas de GreenCycle
+
+Para ejecutar las pruebas automatizadas:
+
+```bash
+php artisan test
+```
+
+Las pruebas verifican el funcionamiento de las operaciones principales, las reglas de negocio, la autenticación y los estados de los árboles.
+
+### Alcance del Sprint 2
+
+El Sprint 2 se enfoca en la gestión de árboles, sus cuidados, crecimiento, salud y deterioro automático.
+
+Las funcionalidades relacionadas con inventario, compras, artículos, efectos y cosecha forman parte de etapas posteriores del desarrollo y no se consideran implementadas únicamente por tener sus modelos o migraciones creados.

@@ -12,7 +12,6 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Gate;
 
 class TreeController extends Controller
 {
@@ -90,7 +89,12 @@ class TreeController extends Controller
 
     public function show(Tree $tree)
     {
-        Gate::authorize('view', $tree);
+        if ((int) $tree->user_id !== (int) request()->user()->id) {
+            return response()->json([
+                'code' => 'NOT_FOUND',
+                'message' => 'El recurso solicitado no existe.',
+            ], Response::HTTP_NOT_FOUND);
+        }
 
         return new TreeResource($tree);
     }
