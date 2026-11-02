@@ -10,16 +10,30 @@ class DemoUserSeeder extends Seeder
 {
     public function run(): void
     {
-        // Usuario solo para demostración
-        $user = User::create([
-            'name' => 'Usuario Demo',
-            'email' => 'demo@greencycle.test',
-            'password' => 'password123', // el cast 'hashed' lo encripta solo
+        $user = User::updateOrCreate(
+            ['email' => 'demo@greencycle.test'],
+            [
+                'name' => 'Usuario Demo',
+                'password' => 'password123',
+            ]
+        );
+
+        // Limpiar únicamente los árboles del usuario de demostración.
+        Tree::where('user_id', $user->id)->delete();
+
+        // Árbol ACTIVE normal.
+        Tree::factory()->for($user)->create([
+            'level' => 3,
+            'progress' => 2,
         ]);
 
-        // Tres árboles, uno por estado
-        Tree::factory()->for($user)->create(['level' => 3, 'progress' => 2]); // ACTIVE
-        Tree::factory()->for($user)->mature()->create();                      // MATURE
-        Tree::factory()->for($user)->dead()->create();                        // DEAD
+        // Árbol ACTIVE con deterioro pendiente.
+        Tree::factory()->for($user)->readyForDecay()->create();
+
+        // Árbol MATURE.
+        Tree::factory()->for($user)->mature()->create();
+
+        // Árbol DEAD.
+        Tree::factory()->for($user)->dead()->create();
     }
 }

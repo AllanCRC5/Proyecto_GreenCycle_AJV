@@ -57,7 +57,7 @@ class Tree extends Model
 
         $this->health = min(
             config('greencycle.health_max', 100),
-            $this->health + config('greencycle.health_per_care', 20)
+            $this->health + config('greencycle.care_heal', 20)
         );
 
         if ($this->progress >= $this->careRequired()) {
