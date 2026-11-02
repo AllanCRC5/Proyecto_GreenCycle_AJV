@@ -519,6 +519,3 @@ Para mantener activo el programador de tareas durante el desarrollo:
 ```bash
 php artisan schedule:work
 ```
-
-**Nota:** No compartas tu archivo `.env` ni publiques tus credenciales de base de datos.
-
