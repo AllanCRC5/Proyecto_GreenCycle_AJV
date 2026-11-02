@@ -379,32 +379,146 @@ El comando revisa los árboles activos y aplica el deterioro correspondiente seg
 
 La tarea está registrada en el programador de Laravel para ejecutarse cada minuto:
 
-```php
 Schedule::command('trees:apply-decay')
     ->everyMinute()
     ->withoutOverlapping();
-```
 
 Para ejecutar el programador durante el desarrollo local:
 
-```bash
 php artisan schedule:work
-```
-
-En producción debe configurarse el mecanismo de ejecución del programador de Laravel en el servidor.
 
 ### Pruebas de GreenCycle
 
 Para ejecutar las pruebas automatizadas:
 
-```bash
+
 php artisan test
-```
 
 Las pruebas verifican el funcionamiento de las operaciones principales, las reglas de negocio, la autenticación y los estados de los árboles.
 
 ### Alcance del Sprint 2
 
 El Sprint 2 se enfoca en la gestión de árboles, sus cuidados, crecimiento, salud y deterioro automático.
+ 
+##Funcionamiento
 
-Las funcionalidades relacionadas con inventario, compras, artículos, efectos y cosecha forman parte de etapas posteriores del desarrollo y no se consideran implementadas únicamente por tener sus modelos o migraciones creados.
+Para revisar el funcionamiento de manera local se deben seguir las siguientes instrucciones:
+## Instalación y ejecución local
+
+### Requisitos
+
+Antes de comenzar, asegúrate de tener instalado:
+
+- PHP 8.3 o superior.
+- Composer 2.
+- Node.js 26 y npm.
+- PostgreSQL.
+- Git.
+
+### 1. Clonar el repositorio
+
+```bash
+git clone URL_DEL_REPOSITORIO
+cd Proyecto_GreenCycle_AJV
+```
+
+### 2. Instalar dependencias
+
+```bash
+composer install
+npm ci
+```
+
+### 2.1(Opcional, en mi caso fue necesario debido a que no tenía acceso al documento). Configurar el entorno
+
+Crear el archivo `.env` a partir del ejemplo:
+
+```bash
+cp .env.example .env
+```
+
+Generar la clave de Laravel:
+
+```bash
+php artisan key:generate
+```
+
+### 3. Configurar la base de datos
+
+Crear una base de datos PostgreSQL llamada `greencycle`:
+
+```bash
+createdb greencycle
+```
+
+Configurar las credenciales de PostgreSQL en el archivo `.env`:
+
+```dotenv
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=greencycle
+DB_USERNAME=tu_usuario
+DB_PASSWORD=tu_contraseña
+```
+
+### 4. Ejecutar migraciones y seeders
+
+```bash
+php artisan migrate --seed
+```
+
+Esto crea las tablas e inserta los datos de demostración.
+
+### 5. Iniciar el proyecto
+
+Abre dos terminales dentro de la carpeta del proyecto.
+
+**Terminal 1 — Laravel:**
+
+```bash
+php artisan serve
+```
+
+**Terminal 2 — Vite:**
+
+```bash
+npm run dev
+```
+
+Abre la dirección que muestra Laravel en la terminal, normalmente:
+
+```text
+http://127.0.0.1:8000
+```
+
+### 6. Ejecutar las pruebas
+
+Para comprobar el funcionamiento del proyecto:
+
+```bash
+php artisan test
+```
+
+Para verificar el formato del código:
+
+```bash
+vendor/bin/pint --test
+```
+
+### Comando de deterioro automático
+
+Para ejecutar manualmente el deterioro de los árboles:
+
+```bash
+php artisan trees:apply-decay
+```
+
+Para mantener activo el programador de tareas durante el desarrollo:
+
+```bash
+php artisan schedule:work
+```
+
+**Nota:** No compartas tu archivo `.env` ni publiques tus credenciales de base de datos.
+
