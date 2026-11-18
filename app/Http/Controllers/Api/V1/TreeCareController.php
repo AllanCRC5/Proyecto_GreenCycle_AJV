@@ -9,12 +9,13 @@ use App\Models\Tree;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 
 class TreeCareController extends Controller
 {
     public function care(Request $request, Tree $tree)
     {
-        return DB::transaction(function () use ($request, $tree) {
+        return DB::transaction(function () use ($tree) {
             // Bloqueamos el árbol para evitar cuidados simultáneos.
             $tree = Tree::query()
                 ->whereKey($tree->id)
@@ -22,17 +23,17 @@ class TreeCareController extends Controller
                 ->firstOrFail();
 
             // Un usuario solo puede cuidar sus propios árboles.
-            if ((int) $tree->user_id !== (int) $request->user()->id) {
+            // Verificamos que el árbol pertenezca al usuario autenticado.
+            $authorization = Gate::inspect('care', $tree);
+
+            if ($authorization->denied()) {
                 return response()->json([
-                    'message' => 'TREE_NOT_FOUND',
-                    'code' => 'TREE_NOT_FOUND',
+                    'message' => 'El recurso solicitado no existe.',
+                    'code' => 'NOT_FOUND',
                 ], Response::HTTP_NOT_FOUND);
             }
 
-            // Aplicamos primero el deterioro que tenga pendiente.
-            $tree->applyDecay();
-
-            // Si el deterioro mató al árbol, no permitimos cuidarlo.
+            // Si el árbol ya está muerto, no permitimos cuidarlo.
             if ($tree->status === TreeStatus::DEAD) {
                 return response()->json([
                     'message' => 'El árbol ha muerto.',
@@ -48,7 +49,7 @@ class TreeCareController extends Controller
                 ], Response::HTTP_CONFLICT);
             }
 
-            // Comprobamos el tiempo de espera entre cuidados.
+            // Comprobamos el cooldown antes de modificar el árbol.
             if ($tree->isInCooldown()) {
                 return response()->json([
                     'message' => 'El árbol todavía está en cooldown.',
@@ -56,6 +57,19 @@ class TreeCareController extends Controller
                     'retry_at' => $tree->next_care_at,
                 ], Response::HTTP_CONFLICT);
             }
+
+            // Aplicamos el deterioro pendiente cuando el cuidado está permitido.
+            $tree->applyDecay();
+
+            // Si el deterioro mató al árbol, no permitimos cuidarlo.
+            if ($tree->status === TreeStatus::DEAD) {
+                return response()->json([
+                    'message' => 'El árbol ha muerto.',
+                    'code' => 'TREE_DEAD',
+                ], Response::HTTP_CONFLICT);
+            }
+
+            // Ahora el servidor comprueba primero si el cuidado está permitido. Si hay cooldown, devuelve el 409 sin ejecutar applyDecay() ni applyCare().
 
             // Aplicamos el cuidado y guardamos el progreso.
             $tree->applyCare();
