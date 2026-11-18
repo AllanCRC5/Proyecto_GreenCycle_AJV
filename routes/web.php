@@ -34,7 +34,7 @@ Route::get('/logout', function () {
     ]);
 });
 
-// Cuando el usuario está autenticado 
+// Cuando el usuario está autenticado
 Route::get('/me', function () {
     return view('respuesta-api', [
         'titulo' => 'Consultar usuario',
@@ -64,7 +64,7 @@ Route::get('/trees/create', function () {
     ]);
 });
 
-//Busca un árbol por id para cuidarlo
+// Busca un árbol por id para cuidarlo
 Route::get('/trees/{tree}/care', function ($tree) {
     return view('respuesta-api', [
         'titulo' => 'Cuidar árbol',
@@ -74,7 +74,7 @@ Route::get('/trees/{tree}/care', function ($tree) {
     ]);
 });
 
-//busca un árbol
+// busca un árbol
 Route::get('/trees/{tree}', function ($tree) {
     return view('respuesta-api', [
         'titulo' => 'Consultar árbol',

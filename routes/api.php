@@ -29,7 +29,7 @@ Route::prefix('v1')
 
             Route::get('me', [AuthController::class, 'me'])
                 ->name('me');
-                
+
             // POST, GET, PUT, DELETE de los arboles.
             Route::apiResource('tree', TreeController::class);
 
