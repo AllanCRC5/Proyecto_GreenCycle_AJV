@@ -29,9 +29,9 @@ Route::prefix('v1')
 
             Route::get('me', [AuthController::class, 'me'])
                 ->name('me');
-            // POST, GET Y SHOW de los arboles.
-            Route::get('trees', [TreeController::class, 'index'])
-                ->name('trees.index');
+
+            // POST, GET, PUT, DELETE de los arboles.
+            Route::apiResource('trees', TreeController::class);
 
             Route::post('trees', [TreeController::class, 'store'])
                 ->name('trees.store');
@@ -41,6 +41,7 @@ Route::prefix('v1')
 
             Route::post('trees/{tree}/care', [TreeCareController::class, 'care'])
                 ->name('trees.care');
+
         });
 
     });
