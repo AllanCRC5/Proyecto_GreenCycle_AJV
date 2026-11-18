@@ -33,8 +33,15 @@ Route::prefix('v1')
             // POST, GET, PUT, DELETE de los arboles.
             Route::apiResource('tree', TreeController::class);
 
-            Route::post('tree/{tree}/care', [TreeCareController::class, 'care'])
-                ->name('tree.care');
-        });
+            Route::post('trees', [TreeController::class, 'store'])
+                ->name('trees.store');
+
+            Route::get('trees/{tree}', [TreeController::class, 'show'])
+                ->name('trees.show');
+
+            Route::post('trees/{tree}/care', [TreeCareController::class, 'care'])
+                ->name('trees.care');
+
+                });
 
     });

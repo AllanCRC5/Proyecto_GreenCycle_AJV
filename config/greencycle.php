@@ -8,7 +8,7 @@ return [
     'max_level' => (int) env('GREENCYCLE_MAX_LEVEL', 10),
     'health_initial' => 100,
     'health_max' => 100,
-    'health_per_care' => (int) env('GREENCYCLE_CARE_HEAL', 20),
+    'care_heal' => (int) env('GREENCYCLE_CARE_HEAL', 20),
     'progress_initial' => 0,
 
     // Cooldown del cuidado manual.

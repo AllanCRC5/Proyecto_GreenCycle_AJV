@@ -17,9 +17,9 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             // seeds
             $table->string('seed_type', 20)->default('BASIC');
-            $table->integer('level')->default(0);
-            $table->integer('health')->default(100);
-            $table->integer('progress')->default(0);
+            $table->unsignedTinyInteger('level')->default(0);
+            $table->unsignedTinyInteger('health')->default(100);
+            $table->unsignedTinyInteger('progress')->default(0);
             $table->string('status', 20)->default('ACTIVE');
             $table->timestamp('last_care_at')->nullable();
             $table->timestamp('next_care_at')->nullable();

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Purchase extends Model
 {
@@ -19,8 +20,8 @@ class Purchase extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function item(): HasMany
+    public function items(): HasMany
     {
-        return $this->HasMany(Item::class);
+        return $this->hasMany(Item::class);
     }
 }

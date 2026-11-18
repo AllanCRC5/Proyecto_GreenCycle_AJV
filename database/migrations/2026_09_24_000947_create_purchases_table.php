@@ -16,7 +16,7 @@ return new class extends Migration
             $table->timestamps();
             // foreignId
             $table->foreignId('user_id')->constrained();
-            $table->integer('quantity')->default(0);
+            $table->unsignedInteger('quantity')->default(0);
             $table->decimal('unit_price', 10, 2)->default(0);
             $table->decimal('total_price', 10, 2)->default(0);
 
