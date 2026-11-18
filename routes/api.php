@@ -42,6 +42,6 @@ Route::prefix('v1')
             Route::post('trees/{tree}/care', [TreeCareController::class, 'care'])
                 ->name('trees.care');
 
-                });
+        });
 
     });
