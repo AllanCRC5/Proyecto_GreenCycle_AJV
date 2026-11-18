@@ -27,8 +27,9 @@ Route::prefix('v1')
             Route::post('logout', [AuthController::class, 'logout'])
                 ->name('logout');
 
-            Route::post('me', [AuthController::class, 'me'])
+            Route::get('me', [AuthController::class, 'me'])
                 ->name('me');
+                
             // POST, GET, PUT, DELETE de los arboles.
             Route::apiResource('tree', TreeController::class);
 
