@@ -31,7 +31,7 @@ Route::prefix('v1')
                 ->name('me');
 
             // POST, GET, PUT, DELETE de los arboles.
-            Route::apiResource('tree', TreeController::class);
+            Route::apiResource('trees', TreeController::class);
 
             Route::post('trees', [TreeController::class, 'store'])
                 ->name('trees.store');

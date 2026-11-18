@@ -48,7 +48,7 @@ Route::get('/me', function () {
 Route::get('/trees', function () {
     return view('respuesta-api', [
         'titulo' => 'Consultar árboles',
-        'endpoint' => '/api/v1/tree',
+        'endpoint' => '/api/v1/trees',
         'method' => 'GET',
         'requiresToken' => true,
     ]);
@@ -58,7 +58,7 @@ Route::get('/trees', function () {
 Route::get('/trees/create', function () {
     return view('respuesta-api', [
         'titulo' => 'Crear árbol',
-        'endpoint' => '/api/v1/tree',
+        'endpoint' => '/api/v1/trees',
         'method' => 'POST',
         'requiresToken' => true,
     ]);
@@ -68,7 +68,7 @@ Route::get('/trees/create', function () {
 Route::get('/trees/{tree}/care', function ($tree) {
     return view('respuesta-api', [
         'titulo' => 'Cuidar árbol',
-        'endpoint' => "/api/v1/tree/{$tree}/care",
+        'endpoint' => "/api/v1/trees/{$tree}/care",
         'method' => 'POST',
         'requiresToken' => true,
     ]);
@@ -78,7 +78,7 @@ Route::get('/trees/{tree}/care', function ($tree) {
 Route::get('/trees/{tree}', function ($tree) {
     return view('respuesta-api', [
         'titulo' => 'Consultar árbol',
-        'endpoint' => "/api/v1/tree/{$tree}",
+        'endpoint' => "/api/v1/trees/{$tree}",
         'method' => 'GET',
         'requiresToken' => true,
     ]);
